@@ -1,5 +1,6 @@
 <script setup>
-defineProps({
+const props = defineProps({
+  id: Number,
   title: String,
   imageUrl: String,
   price: Number,
@@ -8,6 +9,17 @@ defineProps({
   onClickAdd: Function,
   onClickFavorite: Function,
 })
+
+const addToFavorite = inject('addToFavorite')
+
+const onClickFavorite = () => {
+  const obj = {
+    ...props,
+    parentd: props.id,
+  }
+
+  addToFavorite(obj)
+}
 </script>
 
 <template>
