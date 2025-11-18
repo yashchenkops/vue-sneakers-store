@@ -1,25 +1,14 @@
 <script setup>
-const props = defineProps({
+defineProps({
   id: Number,
   title: String,
   imageUrl: String,
   price: Number,
   isFavorite: Boolean,
   isAdded: Boolean,
-  onClickAdd: Function,
   onClickFavorite: Function,
+  onClickAdd: Function,
 })
-
-const addToFavorite = inject('addToFavorite')
-
-const onClickFavorite = () => {
-  const obj = {
-    ...props,
-    parentd: props.id,
-  }
-
-  addToFavorite(obj)
-}
 </script>
 
 <template>
