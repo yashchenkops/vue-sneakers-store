@@ -1,106 +1,162 @@
 <script setup>
-import { ref, onMounted, watch, reactive, provide } from 'vue'
-import axios from 'axios'
+import { ref, onMounted, watch, reactive, provide, computed } from 'vue';
+import axios from 'axios';
 
-import Header from './components/Header.vue'
-import CardList from './components/CardList.vue'
-import Drawer from './components/Drawer.vue'
+import Header from './components/Header.vue';
+import CardList from './components/CardList.vue';
+import Drawer from './components/Drawer.vue';
 
-const items = ref([])
+const items = ref([]);
+const cart = ref([]);
+const drawerOpen = ref(false);
+const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0));
+const vatPrice = computed(() => Math.round((totalPrice.value * 5) / 100));
+
+const closeDrawer = () => {
+  drawerOpen.value = false;
+};
+
+const openDrawer = () => {
+  drawerOpen.value = true;
+};
 
 const filters = reactive({
   sortBy: 'title',
   searchQuery: '',
-})
+});
+
+const addToCart = (item) => {
+  cart.value.push(item);
+  item.isAdded = true;
+};
+
+const removeFromCart = (item) => {
+  cart.value.splice(cart.value.indexOf(item), 1);
+  item.isAdded = false;
+};
+
+const createOrder = async () => {
+  try {
+    const { data } = await axios.post(`https://fa58b7fdb36d538b.mokky.dev/orders`, {
+      items: cart,
+      totalPrice: totalPrice.value,
+    });
+
+    cart.value = [];
+
+    return data;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const onClickAddPlus = (item) => {
+  if (!item.isAdded) {
+    addToCart(item);
+  } else {
+    removeFromCart(item);
+  }
+};
 
 const onChangeSelect = (event) => {
-  filters.sortBy = event.target.value
-}
+  filters.sortBy = event.target.value;
+};
 
 const onChangeSearchInput = (event) => {
-  filters.searchQuery = event.target.value
-}
+  filters.searchQuery = event.target.value;
+};
 
 const fetchFavorites = async () => {
   try {
-    const { data: favorites } = await axios.get('https://fa58b7fdb36d538b.mokky.dev/favorites')
+    const { data: favorites } = await axios.get('https://fa58b7fdb36d538b.mokky.dev/favorites');
 
     items.value = items.value.map((item) => {
-      const favorite = favorites.find((favorite) => favorite.parentId === item.id)
+      const favorite = favorites.find((favorite) => favorite.parentId === item.id);
 
       if (!favorite) {
-        return item
+        return item;
       }
 
       return {
         ...item,
         isFavorite: true,
         favoriteId: favorite.id,
-      }
-    })
+      };
+    });
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
-}
+};
 
 const addToFavorite = async (item) => {
   try {
     if (!item.isFavorite) {
       const obj = {
         parentId: item.id,
-      }
-      item.isFavorite = true
+      };
+      item.isFavorite = true;
 
-      const { data } = await axios.post('https://fa58b7fdb36d538b.mokky.dev/favorites', obj)
+      const { data } = await axios.post('https://fa58b7fdb36d538b.mokky.dev/favorites', obj);
 
-      item.favoriteId = data.id
+      item.favoriteId = data.id;
     } else {
-      item.isFavorite = false
-      await axios.delete(`https://fa58b7fdb36d538b.mokky.dev/favorites/${item.favoriteId}`)
-      item.favoriteId = null
+      item.isFavorite = false;
+      await axios.delete(`https://fa58b7fdb36d538b.mokky.dev/favorites/${item.favoriteId}`);
+      item.favoriteId = null;
     }
   } catch (err) {}
-}
+};
 
 const fetchItems = async () => {
   try {
     const params = {
       sortBy: filters.sortBy,
-    }
+    };
 
     if (filters.searchQuery) {
-      params.title = `*${filters.searchQuery}*`
+      params.title = `*${filters.searchQuery}*`;
     }
 
     const { data } = await axios.get('https://fa58b7fdb36d538b.mokky.dev/items', {
       params,
-    })
+    });
 
     items.value = data.map((obj) => ({
       ...obj,
       isFavorite: false,
       favoriteId: null,
       isAdded: false,
-    }))
+    }));
   } catch (err) {
-    console.log(err)
+    console.log(err);
   }
-}
+};
 
 onMounted(async () => {
-  await fetchItems()
-  await fetchFavorites()
-})
+  await fetchItems();
+  await fetchFavorites();
+});
 
-watch(filters, fetchItems)
+watch(filters, fetchItems);
 
-provide('addToFavorite', addToFavorite)
+provide('cart', {
+  cart,
+  closeDrawer,
+  openDrawer,
+  addToCart,
+  removeFromCart,
+});
 </script>
 
 <template>
-  <!-- <Drawer /> -->
+  <Drawer
+    v-if="drawerOpen"
+    :total-price="totalPrice"
+    :vat-price="vatPrice"
+    @create-order="createOrder"
+  />
   <div class="bg-white w-4/5 m-auto rounded-xl shadow-xl mt-14">
-    <Header />
+    <Header :total-price="totalPrice" @open-drawer="openDrawer" />
 
     <div class="p-10">
       <div class="flex justify-between items-center">
@@ -129,7 +185,7 @@ provide('addToFavorite', addToFavorite)
       </div>
 
       <div class="mt-10">
-        <CardList :items="items" @addToFavorite="addToFavorite" />
+        <CardList :items="items" @add-to-favorite="addToFavorite" @add-to-cart="onClickAddPlus" />
       </div>
     </div>
   </div>
