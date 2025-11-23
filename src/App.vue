@@ -3,7 +3,6 @@ import { ref, watch, provide, computed } from 'vue';
 
 import Header from './components/Header.vue';
 import Drawer from './components/Drawer.vue';
-import Home from './pages/Home.vue'
 
 /* Cart START */
 const cart = ref([]);
@@ -83,7 +82,7 @@ provide('cart', {
     <Header :total-price="totalPrice" @open-drawer="openDrawer" />
 
     <div class="p-10">
-      <Home />
+      <router-view></router-view>
     </div>
   </div>
 </template>
