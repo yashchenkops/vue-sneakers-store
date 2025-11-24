@@ -123,7 +123,7 @@ watch(filters, fetchItems);
   <div class="flex justify-between items-center">
     <h2 class="text-3xl font-bold mb-8">Все кроссовки</h2>
     <div class="flex gap-4">
-      <select @change="onChangeSelect" class="py-2 px-3 border rounded-md outline-none">
+      <select @change="onChangeSelect" class="py-2 px-3 border rounded-md outline-none cursor-pointer">
         <option value="name">По названию</option>
         <option value="price">По цене (дешевые)</option>
         <option value="-price">По цене (дорогие)</option>
@@ -144,3 +144,18 @@ watch(filters, fetchItems);
     <CardList :items="items" @add-to-favorite="addToFavorite" @add-to-cart="onClickAddPlus" />
   </div>
 </template>
+
+<style scoped>
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+option {
+  cursor: pointer;
+}
+</style>
